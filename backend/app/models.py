@@ -6,8 +6,8 @@ class Column(DynamoModel):
     table_name = 'columns'
 
     id = StringField(partition_key=True, default=lambda: str(uuid4()))
+    order = NumberField(sort_key=True)
     title = StringField()
-    order = NumberField()
     created_at = TimestampField()
 
 

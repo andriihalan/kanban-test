@@ -1,4 +1,4 @@
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 from flask import current_app
 
 
@@ -22,7 +22,32 @@ class DynamoManager:
             return self.model(**item)
         return None
 
-    def find(self, **kwargs):
+    def all(self):
+        response = self.table.scan()
+        items = response.get('Items', [])
+        return [self.model(**item) for item in items]
+
+    def query(self, index_name=None, sort_ascending=False, **kwargs):
+        expression = None
+        for key, value in kwargs.items():
+            if expression is None:
+                expression = Key(key).eq(value)
+            else:
+                expression &= Key(key).eq(value)
+
+        query_params = {
+            'KeyConditionExpression': expression
+        }
+        if index_name:
+            query_params['IndexName'] = index_name
+            query_params['ScanIndexForward'] = sort_ascending
+
+        response = self.table.query(**query_params)
+        items = response.get('Items', [])
+
+        return [self.model(**item) for item in items]
+
+    def filter(self, **kwargs):
         filter_expression = None
         for key, value in kwargs.items():
             if filter_expression is None:
@@ -45,7 +70,7 @@ class DynamoManager:
             ExpressionAttributeValues=expression_attribute_values
         )
 
-    def delete(self, **kwargs):
+    def delete_item(self, **kwargs):
         self.table.delete_item(Key=kwargs)
 
     @staticmethod

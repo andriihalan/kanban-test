@@ -1,8 +1,10 @@
 import os
 from flask import Flask
+from graphql_server.flask import GraphQLView
 
 from db import Dynamo
 from app.models import Card, Column
+from app.graphql import schema
 
 
 def create_app():
@@ -14,5 +16,11 @@ def create_app():
     db = Dynamo()
     db.init_app(app)
     db.init_models(models=[Card, Column], reset_table=False)
+
+    app.add_url_rule('/graphql', view_func=GraphQLView.as_view(
+        'graphql',
+        schema=schema,
+        graphiql=True,
+    ))
 
     return app

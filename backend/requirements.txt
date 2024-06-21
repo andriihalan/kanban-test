@@ -1,4 +1,4 @@
 graphene
+graphql-server[flask]
 flask
-flask-graphql
 boto3

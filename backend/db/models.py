@@ -37,6 +37,7 @@ class DynamoModel(metaclass=DynamoModelMeta):
     def save(self):
         self.set_default_values()
         self.manager.save(self)
+        return self
 
     def set_default_values(self):
         for field, attrs in self._fields.items():
