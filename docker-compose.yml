@@ -12,9 +12,11 @@ services:
       - FLASK_ENV=development
       - APP_SETTINGS=app.config.LocalSettings
       - SECRET_KEY=secret
-      - DATABASE_URL=http://dynamodb:8000
+      - DATABASE_URL=http://dynamodb-local:8000
+      - AWS_ACCESS_KEY_ID=AKIA534RGS2ACJQ5CITW
+      - AWS_SECRET_ACCESS_KEY=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
     depends_on:
-      - dynamodb
+      - dynamodb-local
 
   frontend:
     build:
@@ -25,18 +27,20 @@ services:
       - ./frontend:/app
     environment:
       - NODE_ENV=development
-      - BACKEND_SERVICE_URL=http://localhost:5000
+      - REACT_APP_BACKEND_SERVICE_URL=http://localhost:5000
     depends_on:
       - backend
 
-  dynamodb:
+  dynamodb-local:
     image: amazon/dynamodb-local:latest
-    container_name: dynamodb
+    container_name: dynamodb-local
+    user: root
     ports:
       - "8000:8000"
     volumes:
       - data:/home/dynamodblocal/data
-    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath ./data
+    working_dir: /home/dynamodblocal
 
 volumes:
   data: {}
