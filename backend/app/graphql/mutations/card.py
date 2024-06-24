@@ -1,61 +1,69 @@
 import graphene
 
 from app.models import Card
-from ..schemas import CardType
+from ..schemas import CardType, CardPositionType
 
 
 class AddCard(graphene.Mutation):
     class Arguments:
-        column_id = graphene.ID(required=True)
+        column_id = graphene.String(required=True)
         title = graphene.String(required=True)
-        description = graphene.String(required=True)
-        order = graphene.Int(required=True)
+        description = graphene.String()
 
     card = graphene.Field(lambda: CardType)
 
     def mutate(root, info, column_id, **card_data):
-        card = Card(column_id=column_id, **card_data)
+        position = Card.get_last_position(column_id=column_id)
+        card = Card(column_id=column_id, position=position + 1, **card_data)
         card = card.save()
         return AddCard(card=card)
 
 
 class RemoveCard(graphene.Mutation):
     class Arguments:
-        card_id = graphene.ID(required=True)
+        column_id = graphene.String(required=True)
+        card_id = graphene.String(required=True)
 
     success = graphene.Boolean()
 
-    def mutate(root, info, card_id):
+    def mutate(root, info, column_id, card_id):
         manager = Card.get_manager()
-        card = manager.get({'id': card_id})
-
+        card = manager.get_item(column_id=column_id, id=card_id)
         if card:
-            manager.delete_item(id=card_id)
+            manager.delete_item(column_id=column_id, id=card_id)
             return RemoveCard(success=True)
-
         return RemoveCard(success=False)
 
 
 class UpdateCard(graphene.Mutation):
     class Arguments:
-        card_id = graphene.ID(required=True)
-        card_data = graphene.String(required=True)
+        column_id = graphene.String(required=True)
+        card_id = graphene.String(required=True)
+        title = graphene.String()
+        description = graphene.String()
 
     card = graphene.Field(lambda: CardType)
 
-    def mutate(root, info, card_id, card_data):
+    def mutate(root, info, column_id, card_id, **card_data):
         manager = Card.get_manager()
-        card = manager.get({'id': card_id})
-
-        for key, value in card_data.items():
-            setattr(card, key, value)
-        card = manager.save(card)
-
+        manager.update_item(column_id=column_id, id=card_id, data=card_data)
+        card = manager.get_item(column_id=column_id, id=card_id)
         return UpdateCard(card=card)
 
 
-class Mutation(graphene.ObjectType):
-    # drag_drop_card = DragDropCard.Field()
-    add_card = AddCard.Field()
-    remove_card = RemoveCard.Field()
-    update_card = UpdateCard.Field()
+class UpdateCardsPositions(graphene.Mutation):
+    class Arguments:
+        items = graphene.List(CardPositionType)
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, items):
+        manager = Card.get_manager()
+        for item in items:
+            print(item)
+            manager.update_item(
+                id=item.id,
+                column_id=item.column_id,
+                data={'position': item.position}
+            )
+        return UpdateCardsPositions(success=True)

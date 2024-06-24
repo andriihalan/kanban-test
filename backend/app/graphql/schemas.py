@@ -6,12 +6,24 @@ class CardType(graphene.ObjectType):
     column_id = graphene.ID()
     title = graphene.String()
     description = graphene.String()
-    order = graphene.Int()
+    position = graphene.Int()
     created_at = graphene.String()
 
 
 class ColumnType(graphene.ObjectType):
     id = graphene.ID()
     title = graphene.String()
-    order = graphene.Int()
+    position = graphene.Int()
     created_at = graphene.String()
+    cards = graphene.List(CardType)
+
+
+class ColumnPositionType(graphene.InputObjectType):
+    id = graphene.String(required=True)
+    position = graphene.Int(required=True)
+
+
+class CardPositionType(graphene.InputObjectType):
+    column_id = graphene.String(required=True)
+    id = graphene.String(required=True)
+    position = graphene.Int(required=True)

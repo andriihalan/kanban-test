@@ -8,19 +8,37 @@ class DynamoManager:
         self.connection = self._get_connection()
         self.table = self._get_table(self.connection, self.model)
 
-    def save(self, instance):
-        item = {
-            field_name: getattr(instance, field_name)
-            for field_name, attrs in self.model._fields.items()
-        }
-        self.table.put_item(Item=item)
-
-    def get(self, key):
-        response = self.table.get_item(Key=key)
+    def get_item(self, **kwargs):
+        response = self.table.get_item(Key=kwargs)
         item = response.get('Item')
         if item:
             return self.model(**item)
         return None
+
+    def save_item(self, instance):
+        item = {
+            field_name: getattr(instance, field_name)
+            for field_name, attrs in self.model._fields.items()
+        }
+        self.model.validate_fields(data=item)
+        self.table.put_item(Item=item)
+
+    def update_item(self, data, **kwargs):
+        self.model.validate_fields(data=data, partial=True)
+
+        update_expression = "SET " + ", ".join(f"#{field} = :{field}" for field in data.keys())
+        expression_attribute_values = {f":{field}": value for field, value in data.items()}
+        expression_attribute_names = {f"#{field}": field for field in data.keys()}
+
+        self.table.update_item(
+            Key=kwargs,
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attribute_values,
+            ExpressionAttributeNames=expression_attribute_names,
+        )
+
+    def delete_item(self, **kwargs):
+        self.table.delete_item(Key=kwargs)
 
     def all(self):
         response = self.table.scan()
@@ -59,19 +77,6 @@ class DynamoManager:
         items = response.get('Items', [])
 
         return [self.model(**item) for item in items]
-
-    def update(self, key, **kwargs):
-        update_expression = "SET " + ", ".join(f"{k} = :{k}" for k in kwargs.keys())
-        expression_attribute_values = {f":{k}": v for k, v in kwargs.items()}
-
-        self.table.update_item(
-            Key=key,
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_attribute_values
-        )
-
-    def delete_item(self, **kwargs):
-        self.table.delete_item(Key=kwargs)
 
     @staticmethod
     def _get_table(connection, model):

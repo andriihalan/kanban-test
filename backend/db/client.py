@@ -24,14 +24,13 @@ class Dynamo:
 
     def init_models(self, models, reset_table=False):
         for model in models:
-            table_exists = self.table_exists(model.table_name)
+            table_exists = self.is_table_exists(model.table_name)
 
             if reset_table and table_exists:
-                table = self.connection.Table(model.table_name)
-                table.delete()
+                model.drop_table(connection=self.connection)
 
             if not table_exists:
                 model.create_table(connection=self.connection)
 
-    def table_exists(self, table_name):
+    def is_table_exists(self, table_name):
         return table_name in [table.name for table in self.connection.tables.all()]

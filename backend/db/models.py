@@ -36,7 +36,7 @@ class DynamoModel(metaclass=DynamoModelMeta):
 
     def save(self):
         self.set_default_values()
-        self.manager.save(self)
+        self.manager.save_item(self)
         return self
 
     def set_default_values(self):
@@ -47,6 +47,14 @@ class DynamoModel(metaclass=DynamoModelMeta):
     @classmethod
     def get_manager(cls):
         return DynamoManager(model=cls)
+
+    @classmethod
+    def validate_fields(cls, data, partial=False):
+        for field, attrs in cls._fields.items():
+            if partial and field not in data:
+                continue
+            value = data.get(field)
+            attrs.validate(f'{cls.table_name}.{field}', value)
 
     @classmethod
     def create_table(cls, connection):
@@ -111,3 +119,8 @@ class DynamoModel(metaclass=DynamoModelMeta):
 
         table = connection.create_table(**table_params)
         table.meta.client.get_waiter('table_exists').wait(TableName=cls.table_name)
+
+    @classmethod
+    def drop_table(cls, connection):
+        table = connection.Table(cls.table_name)
+        table.delete()

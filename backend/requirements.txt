@@ -1,4 +1,5 @@
 graphene
 graphql-server[flask]
 flask
+flask-cors
 boto3

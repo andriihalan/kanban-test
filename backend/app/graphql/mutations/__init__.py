@@ -1,5 +1,5 @@
-from .column import CreateColumn, UpdateColumn, DeleteColumn
-from .card import AddCard, RemoveCard, UpdateCard
+from .column import CreateColumn, UpdateColumn, DeleteColumn, UpdateColumnsPositions
+from .card import AddCard, RemoveCard, UpdateCard, UpdateCardsPositions
 
 __all__ = [
     'CreateColumn',
@@ -8,4 +8,6 @@ __all__ = [
     'AddCard',
     'RemoveCard',
     'UpdateCard',
+    'UpdateColumnsPositions',
+    'UpdateCardsPositions',
 ]
