@@ -13,8 +13,8 @@ services:
       - APP_SETTINGS=app.config.LocalSettings
       - SECRET_KEY=secret
       - DATABASE_URL=http://dynamodb-local:8000
-      - AWS_ACCESS_KEY_ID=AKIA534RGS2ACJQ5CITW
-      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_ACCESS_KEY_ID=custom
+      - AWS_SECRET_ACCESS_KEY=custom
     depends_on:
       - dynamodb-local
 

@@ -1,6 +1,6 @@
 import graphene
 
-from app.models import Column
+from app.models import Column, Card
 from ..schemas import ColumnType, ColumnPositionType
 
 
@@ -40,6 +40,11 @@ class DeleteColumn(graphene.Mutation):
     def mutate(self, info, id):
         manager = Column.get_manager()
         manager.delete_item(id=id)
+
+        manager = Card.get_manager()
+        for card in manager.query(column_id=id):
+            manager.delete_item(id=card.id, column_id=card.column_id)
+
         return DeleteColumn(success=True)
 
 
