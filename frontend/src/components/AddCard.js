@@ -2,15 +2,14 @@ import React, { useState } from 'react'
 import { useMutation } from '@apollo/client';
 import { Button, Input } from '@material-tailwind/react';
 
-import { ADD_CARD, GET_CARDS } from '../graphql';
+import { ADD_CARD, GET_COLUMNS } from '../graphql';
 
 
 const AddCardAction = ({columnId}) => {
-  const [createCard] = useMutation(ADD_CARD);
+  const [createCard, {loading}] = useMutation(ADD_CARD);
 
   const [editable, setEditable] = useState(false)
   const [title, setTitle] = useState('')
-  const [loading, setLoading] = useState(false);
 
 
   const handleAddCard = async () => {
@@ -19,28 +18,33 @@ const AddCardAction = ({columnId}) => {
       return;
     }
 
-    setLoading(true);
     await createCard({
       variables: {
         columnId: columnId,
         title: title,
       },
       update: (cache, {data: {addCard}}) => {
-        const {cards} = cache.readQuery({
-          query: GET_CARDS,
-          variables: {columnId},
+        const {columns} = cache.readQuery({
+          query: GET_COLUMNS,
+        });
+        const updatedColumns = columns.map(column => {
+          if (column.id === columnId) {
+            return {
+              ...column,
+              cards: [...column.cards, addCard],
+            };
+          }
+          return column;
         });
         cache.writeQuery({
-          query: GET_CARDS,
-          variables: {columnId},
+          query: GET_COLUMNS,
           data: {
-            cards: [...cards, addCard],
+            columns: updatedColumns,
           },
         });
       },
     });
     setTitle('');
-    setLoading(false);
     setEditable(false);
   };
 

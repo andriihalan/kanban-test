@@ -44,6 +44,13 @@ class DynamoModel(metaclass=DynamoModelMeta):
             if attrs.default is not None:
                 setattr(self, field, attrs.default())
 
+    def serialize(self):
+        data = {}
+        for field, attrs in self._fields.items():
+            value = getattr(self, field)
+            data[field] = attrs.prep_value_to_db(value)
+        return data
+
     @classmethod
     def get_manager(cls):
         return DynamoManager(model=cls)

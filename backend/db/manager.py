@@ -16,20 +16,24 @@ class DynamoManager:
         return None
 
     def save_item(self, instance):
-        item = {
-            field_name: getattr(instance, field_name)
-            for field_name, attrs in self.model._fields.items()
-        }
+        item = instance.serialize()
         self.model.validate_fields(data=item)
         self.table.put_item(Item=item)
 
     def update_item(self, data, **kwargs):
-        self.model.validate_fields(data=data, partial=True)
+        # Validate and serialize the data
+        serialized_data = {}
+        for field_name, value in data.items():
+            field = self.model._fields[field_name]
+            field.validate(field_name, value)
+            serialized_data[field_name] = field.prep_value_to_db(value)
 
-        update_expression = "SET " + ", ".join(f"#{field} = :{field}" for field in data.keys())
-        expression_attribute_values = {f":{field}": value for field, value in data.items()}
-        expression_attribute_names = {f"#{field}": field for field in data.keys()}
+        # Prepare the update expression and attribute dictionaries
+        update_expression = "SET " + ", ".join(f"#{field} = :{field}" for field in serialized_data.keys())
+        expression_attribute_values = {f":{field}": value for field, value in serialized_data.items()}
+        expression_attribute_names = {f"#{field}": field for field in serialized_data.keys()}
 
+        # Perform the update operation
         self.table.update_item(
             Key=kwargs,
             UpdateExpression=update_expression,
@@ -39,6 +43,25 @@ class DynamoManager:
 
     def delete_item(self, **kwargs):
         self.table.delete_item(Key=kwargs)
+
+    def replace_item(self, old_key, new_item_data):
+        self.model.validate_fields(data=new_item_data)
+        transact_items = [
+            {
+                'Put': {
+                    'TableName': self.model.table_name,
+                    'Item': new_item_data
+                }
+            },
+            {
+                'Delete': {
+                    'TableName': self.model.table_name,
+                    'Key': old_key
+                }
+            }
+        ]
+        print(transact_items)
+        self.connection.meta.client.transact_write_items(TransactItems=transact_items)
 
     def all(self):
         response = self.table.scan()

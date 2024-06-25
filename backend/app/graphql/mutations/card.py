@@ -59,11 +59,24 @@ class UpdateCardsPositions(graphene.Mutation):
 
     def mutate(self, info, items):
         manager = Card.get_manager()
+
         for item in items:
-            print(item)
-            manager.update_item(
-                id=item.id,
-                column_id=item.column_id,
-                data={'position': item.position}
-            )
+            if item.previous_column_id:
+                old_key = {
+                    'column_id': item.previous_column_id,
+                    'id': item.id
+                }
+                card = manager.get_item(**old_key)
+                new_item_data = card.serialize()
+                new_item_data['column_id'] = item.column_id
+                manager.replace_item(
+                    old_key=old_key,
+                    new_item_data=new_item_data
+                )
+            else:
+                manager.update_item(
+                    id=item.id,
+                    column_id=item.column_id,
+                    data={'position': item.position}
+                )
         return UpdateCardsPositions(success=True)

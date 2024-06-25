@@ -6,6 +6,13 @@ export const GET_COLUMNS = gql`
       id
       title
       position
+      cards {
+        id
+        columnId
+        title
+        description
+        position
+      }
     }
   }
 `;

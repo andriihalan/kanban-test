@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
+import { Draggable } from 'react-beautiful-dnd';
 import {
   Button,
   Dialog,
@@ -10,10 +11,10 @@ import {
   Textarea
 } from '@material-tailwind/react'
 
-import { UPDATE_CARD, REMOVE_CARD, GET_CARDS } from '../graphql';
+import { UPDATE_CARD, REMOVE_CARD, GET_COLUMNS } from '../graphql';
 
 
-const Card = ({card}) => {
+const Card = ({card, index}) => {
   const [deleteCard] = useMutation(REMOVE_CARD);
   const [updateCard] = useMutation(UPDATE_CARD);
 
@@ -33,15 +34,22 @@ const Card = ({card}) => {
         cardId: card.id,
       },
       update: (cache) => {
-        const {cards} = cache.readQuery({
-          query: GET_CARDS,
-          variables: {columnId: card.columnId},
+        const {columns} = cache.readQuery({
+          query: GET_COLUMNS,
+        });
+        const updatedColumns = columns.map(column => {
+          if (column.id === card.columnId) {
+            return {
+              ...column,
+              cards: (column.cards || []).filter(c => c.id !== card.id),
+            };
+          }
+          return column;
         });
         cache.writeQuery({
-          query: GET_CARDS,
-          variables: {columnId: card.columnId},
+          query: GET_COLUMNS,
           data: {
-            cards: cards.filter(c => c.id !== card.id),
+            columns: updatedColumns,
           },
         });
       },
@@ -58,17 +66,25 @@ const Card = ({card}) => {
         description,
       },
       update: (cache) => {
-        const {cards} = cache.readQuery({
-          query: GET_CARDS,
-          variables: {columnId: card.columnId},
+        const {columns} = cache.readQuery({
+          query: GET_COLUMNS,
         });
-        const updatedCards = cards.map(c =>
-          c.id === card.id ? {...c, title, description} : c
-        );
+        const updatedColumns = columns.map(column => {
+          if (column.id === card.columnId) {
+            return {
+              ...column,
+              cards: (column.cards || []).map(c =>
+                c.id === card.id ? {...c, title, description} : c
+              ),
+            };
+          }
+          return column;
+        });
         cache.writeQuery({
-          query: GET_CARDS,
-          variables: {columnId: card.columnId},
-          data: {cards: updatedCards},
+          query: GET_COLUMNS,
+          data: {
+            columns: updatedColumns,
+          },
         });
       },
     });
@@ -84,12 +100,22 @@ const Card = ({card}) => {
     setOpen(!open);
   };
 
-
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm mb-4">
-      <h3 className="text-md font-medium cursor-pointer" onClick={handleToggle}>
-        {card.title}
-      </h3>
+    <>
+      <Draggable draggableId={card.id} index={index}>
+        {(provided) => (
+          <div
+            className="bg-white p-4 rounded-md shadow-sm mb-4"
+            {...provided.draggableProps}
+            ref={provided.innerRef}
+            {...provided.dragHandleProps}
+          >
+            <h3 className="text-md font-medium cursor-pointer" onClick={handleToggle}>
+              {card.title}
+            </h3>
+          </div>
+        )}
+      </Draggable>
 
       <Dialog size="sm" open={open} handler={handleToggle}>
         <DialogHeader>Edit Card</DialogHeader>
@@ -131,7 +157,7 @@ const Card = ({card}) => {
           </Button>
         </DialogFooter>
       </Dialog>
-    </div>
+    </>
   );
 };
 

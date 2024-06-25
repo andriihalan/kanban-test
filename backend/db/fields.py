@@ -21,6 +21,9 @@ class DynamoField:
             raise ValueError(f"{fieldname} field is required.")
         return value
 
+    def prep_value_to_db(self, value):
+        return value
+
 
 class StringField(DynamoField):
     def __init__(self, max_length=None, **kwargs):
@@ -33,6 +36,9 @@ class StringField(DynamoField):
             raise ValueError(f"{fieldname} field must be at most {self.max_length} characters.")
         return value
 
+    def prep_value_to_db(self, value):
+        return value
+
 
 class NumberField(DynamoField):
     def __init__(self, **kwargs):
@@ -43,6 +49,10 @@ class NumberField(DynamoField):
         if value is not None and not isinstance(value, (int, float)):
             raise ValueError(f"{fieldname} field must be a number.")
         return value
+
+    def prep_value_to_db(self, value):
+        if value is not None:
+            return int(value)
 
 
 class TimestampField(StringField):

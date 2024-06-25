@@ -25,5 +25,6 @@ class ColumnPositionType(graphene.InputObjectType):
 
 class CardPositionType(graphene.InputObjectType):
     column_id = graphene.String(required=True)
+    previous_column_id = graphene.String()
     id = graphene.String(required=True)
     position = graphene.Int(required=True)

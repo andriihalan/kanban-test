@@ -11,7 +11,7 @@ function App() {
         </div>
       </header>
       <main>
-        <div className="container mx-auto p-4">
+        <div className="max-w-fit mx-auto p-8">
           <Board/>
         </div>
       </main>
