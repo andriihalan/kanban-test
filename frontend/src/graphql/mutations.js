@@ -6,7 +6,10 @@ export const ADD_CARD = gql`
     addCard(columnId: $columnId, title: $title) {
       card {
         id
+        columnId
         title
+        description
+        position
       }
     }
   }

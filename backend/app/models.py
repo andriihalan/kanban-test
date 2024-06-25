@@ -21,7 +21,6 @@ class Column(DynamoModel):
         columns = cls.get_manager().all()
         if columns:
             last_column = max(columns, key=lambda column: int(column.position))
-            print(columns, last_column.position)
             return int(last_column.position)
         return 0
 

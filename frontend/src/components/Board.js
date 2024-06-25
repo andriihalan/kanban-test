@@ -32,8 +32,9 @@ const Board = () => {
       },
     });
   };
-const handleOnDragEnd = async (result) => {
-    const { destination, source, draggableId, type } = result;
+
+  const handleOnDragEnd = async (result) => {
+    const {destination, source, draggableId, type} = result;
     if (!destination) return;
 
     if (type === 'COLUMN') {
@@ -49,11 +50,11 @@ const handleOnDragEnd = async (result) => {
       }));
 
       await updatePositions({
-        variables: { items: updatedItems },
+        variables: {items: updatedItems},
         update: (cache) => {
           cache.writeQuery({
             query: GET_COLUMNS,
-            data: { columns: reorderedItems },
+            data: {columns: reorderedItems},
           });
         },
       });
@@ -70,14 +71,14 @@ const handleOnDragEnd = async (result) => {
 
       if (source.droppableId === destination.droppableId) {
         sourceCards.splice(destination.index, 0, movedCard);
-        const newSourceColumn = { ...sourceColumn, cards: sourceCards };
+        const newSourceColumn = {...sourceColumn, cards: sourceCards};
         const newColumns = [...columns];
         newColumns[sourceColumnIndex] = newSourceColumn;
         setColumns(newColumns);
       } else {
-        destinationCards.splice(destination.index, 0, { ...movedCard, columnId: destinationColumn.id });
-        const newSourceColumn = { ...sourceColumn, cards: sourceCards };
-        const newDestinationColumn = { ...destinationColumn, cards: destinationCards };
+        destinationCards.splice(destination.index, 0, {...movedCard, columnId: destinationColumn.id});
+        const newSourceColumn = {...sourceColumn, cards: sourceCards};
+        const newDestinationColumn = {...destinationColumn, cards: destinationCards};
         const newColumns = [...columns];
         newColumns[sourceColumnIndex] = newSourceColumn;
         newColumns[destinationColumnIndex] = newDestinationColumn;
@@ -129,7 +130,7 @@ const handleOnDragEnd = async (result) => {
               <Draggable key={column.id} draggableId={column.id} index={index}>
                 {(provided) => (
                   <div ref={provided.innerRef} {...provided.draggableProps} >
-                    <Column key={column.id} column={column} dragHandleProps={provided.dragHandleProps}  />
+                    <Column key={column.id} column={column} dragHandleProps={provided.dragHandleProps}/>
                   </div>
                 )}
               </Draggable>

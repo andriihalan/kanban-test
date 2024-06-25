@@ -47,20 +47,9 @@ class DynamoManager:
     def replace_item(self, old_key, new_item_data):
         self.model.validate_fields(data=new_item_data)
         transact_items = [
-            {
-                'Put': {
-                    'TableName': self.model.table_name,
-                    'Item': new_item_data
-                }
-            },
-            {
-                'Delete': {
-                    'TableName': self.model.table_name,
-                    'Key': old_key
-                }
-            }
+            {'Put': {'TableName': self.model.table_name, 'Item': new_item_data}},
+            {'Delete': {'TableName': self.model.table_name, 'Key': old_key}}
         ]
-        print(transact_items)
         self.connection.meta.client.transact_write_items(TransactItems=transact_items)
 
     def all(self):
